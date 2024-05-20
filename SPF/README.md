@@ -11,7 +11,7 @@ ryu-manager --observe-links dijkstra_Ryu_controller.py
 ```
 
 Pada program `topo-spf_lab.py` akan membentuk topologi yang terdapat loopnya seperti tampak pada gambar topologi yang terdiri atas 6 hosts (h1 - h6) dan 3 switch (s1, s2, s3) dengan skenario sebagai berikut:
-![topology](/SPF/img/3sw6h_loop.jp)
+![topology](/SPF/img/3sw6h_loop.jpg)
 - semua host (h1 - h6) harus dapat terhubung satu sama lain dan menggunakan jalur terpendek
   ```
   mininet> h1 ping h6
