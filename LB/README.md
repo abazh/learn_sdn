@@ -1,5 +1,6 @@
 # Server Load Balancing
-Berisikan eksplorasi tentang aplikasi serverload balancer di RYU.
+Berisikan eksplorasi tentang aplikasi serverload balancer di RYU. Topologi mengacu pada gambar berikut:
+![img](/LB/img/topo_lb.jpg)
 
 1. Jalankan mininet dengan program dengan perintah pada salah satu terminal console:
 ```
