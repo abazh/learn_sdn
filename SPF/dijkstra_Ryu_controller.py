@@ -33,11 +33,9 @@ def minimum_distance(distance, Q):
             node = v
     return node
 
- 
-
 def get_path (src, dst, first_port, final_port):
     # executing Dijkstra's algorithm
-    print( "get_path function is called, src=", src," dst=", dst, " first_port=", first_port, " final_port=", final_port)
+    print( f"Dijkstra computes SPF path from DPIP: {src} port= {first_port} to DPID: {dst} port {final_port}")
     
     # defining dictionaries for saving each node's distance and its previous node in the path from first node to that node
     distance = {}
@@ -104,19 +102,19 @@ def get_path (src, dst, first_port, final_port):
     r.append((dst, in_port, final_port))
     return r
 
- 
-
-class ProjectController(app_manager.RyuApp):
+class DijkstraSwitch(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
-        super(ProjectController, self).__init__(*args, **kwargs)
+        super(DijkstraSwitch, self).__init__(*args, **kwargs)
         self.topology_api_app = self
         self.datapath_list = []
+        self.switches = []
+        self.mymacs = {}
 
     def install_path(self, p, ev, src_mac, dst_mac):
-       print("install_path function is called!")
-       #print( "p=", p, " src_mac=", src_mac, " dst_mac=", dst_mac)
+    #    print("install_path function is called!")
+       print( f"Installing SPF Path: {p} from SRC: {src_mac} to DST {dst_mac}" )
        msg = ev.msg
        datapath = msg.datapath
        ofproto = datapath.ofproto
@@ -126,22 +124,21 @@ class ProjectController(app_manager.RyuApp):
             #print( src_mac,"->", dst_mac, "via ", sw, " in_port=", in_port, " out_port=", out_port)
             # setting match part of the flow table
             match = parser.OFPMatch(in_port=in_port, eth_src=src_mac, eth_dst=dst_mac)
-            # setting actions part of the flow table
+            # setting actions part of the} flow table
             actions = [parser.OFPActionOutput(out_port)]
             # getting the datapath
             datapath = self.datapath_list[int(sw)-1]
             # getting instructions based on the actions
             inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS , actions)]
-            mod = datapath.ofproto_parser.OFPFlowMod(datapath=datapath, match=match, idle_timeout=0, hard_timeout=0,
+            mod = datapath.ofproto_parser.OFPFlowMod(datapath=datapath, match=match, idle_timeout=10, hard_timeout=30,
                                                      priority=1, instructions=inst)
             # finalizing the change to switch datapath
             datapath.send_msg(mod)
 
- 
     # defining event handler for setup and configuring of switches
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures , CONFIG_DISPATCHER)
     def switch_features_handler(self , ev):
-        print("switch_features_handler function is called")
+        # print("switch_features_handler function is called")
         # getting the datapath, ofproto and parser objects of the event
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
@@ -159,7 +156,6 @@ class ProjectController(app_manager.RyuApp):
         # finalizing the mod 
         datapath.send_msg(mod)
 
- 
     # defining an event handler for packets coming to switches event
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -183,22 +179,22 @@ class ProjectController(app_manager.RyuApp):
         dst = eth.dst
         src = eth.src
         dpid = datapath.id
-        print("packet in. src=", src, " dst=", dst," dpid=", dpid)
+        # print(f"Packet-In detected for SRC: {src} to DST: {dst} on SWITCH DPID: {dpid}")
 
         # add the host to the mymacs of the first switch that gets the packet
         if src not in mymacs.keys():
             mymacs[src] = (dpid, in_port)
-            print("mymacs=", mymacs)
+            # print("mymacs=", mymacs)
 
         # finding shortest path if destination exists in mymacs
         if dst in mymacs.keys():
-            print("destination is known.")
+            # print(f"Find SPF from {mymacs}")
             p = get_path(mymacs[src][0], mymacs[dst][0], mymacs[src][1], mymacs[dst][1])
             self.install_path(p, ev, src, dst)
-            print("installed path=", p)
+            # print(f"Installing SPF Path: {p}")
             out_port = p[0][2]
         else:
-            print("destination is unknown.Flood has happened.")
+            # print("destination is unknown. Flood has happened.")
             out_port = ofproto.OFPP_FLOOD
 
         # getting actions part of the flow table
@@ -211,7 +207,6 @@ class ProjectController(app_manager.RyuApp):
                                   actions=actions, data=data)
         datapath.send_msg(out)
 
-    
     # defining an event handler for adding/deleting of switches, hosts, ports and links event
     events = [event.EventSwitchEnter,
               event.EventSwitchLeave, event.EventPortAdd,
@@ -220,11 +215,12 @@ class ProjectController(app_manager.RyuApp):
     @set_ev_cls(events)
     def get_topology_data(self, ev):
         global switches
-        print("get_topology_data is called.")
+        global mylinks
+        # print("get_topology_data is called.")
         # getting the list of known switches 
         switch_list = get_switch(self.topology_api_app, None)  
         switches = [switch.dp.id for switch in switch_list]
-        print("current known switches=", switches)
+        # print("current known switches=", switches)
         # getting the list of datapaths from the list of switches
         self.datapath_list = [switch.dp for switch in switch_list]
         # sorting the datapath list based on their id so that indexing them in install_function will be correct
