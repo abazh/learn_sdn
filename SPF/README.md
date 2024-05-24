@@ -18,7 +18,7 @@ Pada program `topo-spf_lab.py` akan membentuk topologi yang terdapat loopnya sep
   ```
 - ujicoba pemutusan salah satu jalur, semisal
   ```
-  mininet> link s1 s2 down
+  mininet> link s1 s3 down
   mininet> h1 ping h6
   ```
 Pada saat ping sebelum dan setelah `link s1 s2 down` amati path terpilih pada terminal yang menjalankan aplikasi dijkstra dengan ryu-manager `dijkstra_Ryu_controller.py` 
