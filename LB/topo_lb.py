@@ -49,7 +49,7 @@ def run():
 
     info("\n***Running Web Servers***\n")
     for web in ["h2", "h3", "h4"]:
-        info("Web Server running in", web, net[web].cmd("python -m http.server 80 &"))
+        info("Web Server running in", web, net[web].cmd("python3 -m http.server 80 &"))
 
 
     info("\n\n************************\n")
