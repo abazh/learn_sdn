@@ -1,11 +1,6 @@
 services:
   learn_sdn:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        MININET_VERSION: master
-    image: learn_sdn:latest
+    image: syafa/learn_sdn:latest
     container_name: learn_sdn
     privileged: true
     stdin_open: true
