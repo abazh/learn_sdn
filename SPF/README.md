@@ -168,6 +168,55 @@ python3 -m pytest tests/ -v
 
 All tests cover the pure-Python algorithm implementations.
 
+## Benchmark Pipeline
+
+The benchmark scripts added in this repo emit JSON Lines first, then convert
+that output to CSV for plotting or notebook work.
+
+Generate graph-mode benchmark data:
+
+```bash
+python3 SPF/benchmark_algorithms.py \
+  --topologies ring5 jellyfish \
+  --algorithms astar widest_path bellman_ford \
+  > benchmark-results.jsonl
+```
+
+Run live Mininet throughput measurement for one topology and one algorithm:
+
+```bash
+python3 SPF/benchmark_algorithms.py \
+  --mode live \
+  --topologies ring5 \
+  --algorithms widest_path \
+  --max-pairs 5 \
+  --iperf-duration 5 \
+  > benchmark-live.jsonl
+```
+
+Convert JSONL to several CSV files:
+
+```bash
+python3 SPF/benchmark_jsonl_to_csv.py \
+  --input benchmark-results.jsonl \
+  --output-dir benchmark-csv \
+  --split-by topology,algorithm
+```
+
+That produces one CSV per topology/algorithm pair, for example:
+
+- `topology-ring5_algorithm-astar.csv`
+- `topology-ring5_algorithm-widest_path.csv`
+- `topology-ring5_algorithm-bellman_ford.csv`
+- `topology-jellyfish_algorithm-astar.csv`
+- `topology-jellyfish_algorithm-widest_path.csv`
+- `topology-jellyfish_algorithm-bellman_ford.csv`
+
+Graph mode stores `throughput_estimate_mbps`, a path-quality proxy derived
+from link capacity and hop count.  Live mode adds `throughput_mbps` from
+`iperf3`, so the same JSONL/CSV pipeline works for both estimated and measured
+results.
+
 ---
 
 ## Logging
