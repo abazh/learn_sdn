@@ -219,6 +219,39 @@ results.
 
 ---
 
+## Scenario Benchmarks (Live + Failures)
+
+The scenario runner executes a full matrix of topology x algorithm x scenario,
+captures pingall loss, injects link/switch failures, and stores tcpdump PCAPs
+per host. Run this with sudo because Mininet + tcpdump require privileges.
+
+```bash
+sudo python3 SPF/testing-code/run_live_scenarios.py \
+  --topologies ring5 jellyfish \
+  --algorithms astar bellman_ford widest_path \
+  --output SPF/csv/live-scenarios.jsonl \
+  --pcap-dir SPF/csv/pcap
+```
+
+Convert JSONL results into CSV (split by topology, algorithm, scenario):
+
+```bash
+python3 SPF/benchmark_jsonl_to_csv.py \
+  --input SPF/csv/live-scenarios.jsonl \
+  --output-dir SPF/csv/scenario-csv \
+  --split-by topology,algorithm,scenario_name
+```
+
+Parse tcpdump PCAPs to CSV (requires scapy):
+
+```bash
+python3 SPF/testing-code/pcap_to_csv.py \
+  --pcap-dir SPF/csv/pcap \
+  --output-dir SPF/csv/pcap-csv
+```
+
+---
+
 ## Logging
 
 All controllers use structured log tags for easy filtering:
