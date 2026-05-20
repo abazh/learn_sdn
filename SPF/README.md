@@ -168,6 +168,88 @@ python3 -m pytest tests/ -v
 
 All tests cover the pure-Python algorithm implementations.
 
+## Benchmark Pipeline
+
+The benchmark scripts added in this repo emit JSON Lines first, then convert
+that output to CSV for plotting or notebook work.
+
+Generate graph-mode benchmark data:
+
+```bash
+python3 SPF/benchmark_algorithms.py \
+  --topologies ring5 jellyfish \
+  --algorithms astar widest_path bellman_ford \
+  > benchmark-results.jsonl
+```
+
+Run live Mininet throughput measurement for one topology and one algorithm:
+
+```bash
+python3 SPF/benchmark_algorithms.py \
+  --mode live \
+  --topologies ring5 \
+  --algorithms widest_path \
+  --max-pairs 5 \
+  --iperf-duration 5 \
+  > benchmark-live.jsonl
+```
+
+Convert JSONL to several CSV files:
+
+```bash
+python3 SPF/benchmark_jsonl_to_csv.py \
+  --input benchmark-results.jsonl \
+  --output-dir benchmark-csv \
+  --split-by topology,algorithm
+```
+
+That produces one CSV per topology/algorithm pair, for example:
+
+- `topology-ring5_algorithm-astar.csv`
+- `topology-ring5_algorithm-widest_path.csv`
+- `topology-ring5_algorithm-bellman_ford.csv`
+- `topology-jellyfish_algorithm-astar.csv`
+- `topology-jellyfish_algorithm-widest_path.csv`
+- `topology-jellyfish_algorithm-bellman_ford.csv`
+
+Graph mode stores `throughput_estimate_mbps`, a path-quality proxy derived
+from link capacity and hop count.  Live mode adds `throughput_mbps` from
+`iperf3`, so the same JSONL/CSV pipeline works for both estimated and measured
+results.
+
+---
+
+## Scenario Benchmarks (Live + Failures)
+
+The scenario runner executes a full matrix of topology x algorithm x scenario,
+captures pingall loss, injects link/switch failures, and stores tcpdump PCAPs
+per host. Run this with sudo because Mininet + tcpdump require privileges.
+
+```bash
+sudo python3 SPF/testing-code/run_live_scenarios.py \
+  --topologies ring5 jellyfish \
+  --algorithms astar bellman_ford widest_path \
+  --output SPF/csv/live-scenarios.jsonl \
+  --pcap-dir SPF/csv/pcap
+```
+
+Convert JSONL results into CSV (split by topology, algorithm, scenario):
+
+```bash
+python3 SPF/benchmark_jsonl_to_csv.py \
+  --input SPF/csv/live-scenarios.jsonl \
+  --output-dir SPF/csv/scenario-csv \
+  --split-by topology,algorithm,scenario_name
+```
+
+Parse tcpdump PCAPs to CSV (requires scapy):
+
+```bash
+python3 SPF/testing-code/pcap_to_csv.py \
+  --pcap-dir SPF/csv/pcap \
+  --output-dir SPF/csv/pcap-csv
+```
+
 ---
 
 ## Logging
