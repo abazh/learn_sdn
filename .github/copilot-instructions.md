@@ -27,6 +27,18 @@
 - Multipath and failover controllers should reuse the existing ECMP or FAST_FAILOVER patterns already documented in [SPF/README.md](../SPF/README.md) and the SPF docs.
 - Prefer linking to [SPF/docs/00-overview.md](../SPF/docs/00-overview.md), [SPF/docs/09-ecmp.md](../SPF/docs/09-ecmp.md), and [SPF/docs/11-suurballe.md](../SPF/docs/11-suurballe.md) when the detail already exists there.
 
+## SPF Evaluation Docs
+- Use [SPF/EXPERIMENT_INDEX.md](../SPF/EXPERIMENT_INDEX.md) as the master catalog for pipeline inventory, sample data, and evaluation tracking.
+- Use [SPF/TESTING_MODES.md](../SPF/TESTING_MODES.md) for the authoritative comparison of graph-mode, live-mode, and scenario-mode.
+- Use [SPF/docs/topik1-az-guide/README.md](../SPF/docs/topik1-az-guide/README.md) as the main A-Z entry point for Topik 1.
+- Use [SPF/docs/pipeline-planning/01-live-mode-planning.md](../SPF/docs/pipeline-planning/01-live-mode-planning.md) and [SPF/docs/pipeline-planning/02-scenario-mode-planning.md](../SPF/docs/pipeline-planning/02-scenario-mode-planning.md) for the structured planning docs.
+- Prefer linking to these canonical docs instead of repeating the same pipeline details in new files.
+
+## SPF Customizations
+- Use [spf-evaluation.instructions.md](instructions/spf-evaluation.instructions.md) when auditing or editing SPF evaluation docs.
+- Use [spf-run-log.prompt.md](prompts/spf-run-log.prompt.md) when generating or filling an operational run log.
+- Use [spf-topik1-doc-audit.agent.md](agents/spf-topik1-doc-audit.agent.md) when you want a focused documentation audit for Topik 1.
+
 ## Agent Bootstrap
 
 When bootstrapping an AI assistant for this workspace, follow a lightweight, link-first workflow:

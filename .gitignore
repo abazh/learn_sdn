@@ -21,6 +21,8 @@ ENV/
 .agents/
 .idea/
 docs/
+!SPF/docs/
+!SPF/docs/**
 *.swp
 *.swo
 *~
