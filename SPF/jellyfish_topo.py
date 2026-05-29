@@ -35,7 +35,7 @@ class JellyfishTopo( Topo ):
             sw   = self.addSwitch( f's{i}' )
             host = self.addHost(
                 f'h{i}',
-                ip=f'10.0.{i}.1/24',
+                ip=f'10.0.0.{i+1}/24',
                 mac=f'00:00:00:00:{i:02x}:01'
             )
             self.addLink( sw, host )
@@ -111,7 +111,9 @@ class JellyfishTopo( Topo ):
 def run():
     "The Topology for Jellyfish Random Regular Graph"
     topo = JellyfishTopo( num_switches=10, num_ports=4, num_sw_ports=3, seed=42 )
-    net = Mininet( topo=topo, controller=RemoteController, autoSetMacs=True, waitConnected=True )
+    net = Mininet( topo=topo, controller=RemoteController, waitConnected=True )
+
+    net.start()
 
     info("\n***Disabling IPv6***\n")
     for host in net.hosts:
@@ -123,7 +125,6 @@ def run():
         sw.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
 
     info("\n\n**********************\n")
-    net.start()
     net.pingAll()
     info("**********************\n")
     CLI(net)
