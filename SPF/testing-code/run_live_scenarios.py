@@ -376,6 +376,8 @@ def run_scenarios(args):
                     raise ValueError(f"unsupported algorithm for live mode: {algorithm_name}")
 
                 for scenario_index, scenario_name in enumerate(args.scenarios):
+                    if topology_name != "jellyfish" and scenario_name == "random_link_down_jellyfish":
+                        continue
                     scenario = SCENARIOS[scenario_name]
                     controller_process = None
                     controller_log_stream = None
