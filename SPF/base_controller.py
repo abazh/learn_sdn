@@ -169,7 +169,7 @@ class SPFBaseController(app_manager.OSKenApp):
             return []
 
         if src != dst and distance.get(dst, float("inf")) == float("inf"):
-            self.logger.warning("[PATH-UNREACHABLE] s%d→s%d: no path in current topology", src, dst)
+            self.logger.debug("[PATH-UNREACHABLE] s%d→s%d: no path in current topology", src, dst)
             return []
 
         # Same-switch: host is directly reachable on this switch
@@ -305,6 +305,36 @@ class SPFBaseController(app_manager.OSKenApp):
             cookie=self.FLOW_COOKIE,
             command=ofproto.OFPFC_ADD,
             idle_timeout=0,
+            hard_timeout=0,
+            priority=FLOW_PRIORITY,
+            match=match,
+            instructions=inst,
+        ))
+
+    def _install_drop_flow(self, datapath, in_port, src_mac, dst_mac, idle_timeout=5):
+        """Install a drop rule with idle_timeout to prevent PacketIn storms."""
+        parser = datapath.ofproto_parser
+        ofproto = datapath.ofproto
+        match = parser.OFPMatch(in_port=in_port, eth_src=src_mac, eth_dst=dst_mac)
+        # Empty action list means drop
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, [])]
+
+        # Delete existing match (strict) before re-adding
+        datapath.send_msg(parser.OFPFlowMod(
+            datapath=datapath,
+            cookie=self.FLOW_COOKIE,
+            cookie_mask=FLOW_COOKIE_MASK,
+            command=ofproto.OFPFC_DELETE_STRICT,
+            out_port=ofproto.OFPP_ANY,
+            out_group=ofproto.OFPG_ANY,
+            priority=FLOW_PRIORITY,
+            match=match,
+        ))
+        datapath.send_msg(parser.OFPFlowMod(
+            datapath=datapath,
+            cookie=self.FLOW_COOKIE,
+            command=ofproto.OFPFC_ADD,
+            idle_timeout=idle_timeout,
             hard_timeout=0,
             priority=FLOW_PRIORITY,
             match=match,
@@ -503,7 +533,8 @@ class SPFBaseController(app_manager.OSKenApp):
                 if p:
                     self.install_path(p, src, dst)
                 else:
-                    self.logger.warning("[PKT-DROP] %s→%s: no path available", src, dst)
+                    self.logger.debug("[PKT-DROP] %s→%s: no path available, installing temporary drop flow", src, dst)
+                    self._install_drop_flow(dp, in_port, src, dst, idle_timeout=5)
                     return
 
             # Find the output port for the current switch in the path
