@@ -19,6 +19,7 @@ from benchmark_core import jsonl_records_to_csv_rows, load_jsonl
 DEFAULT_COLUMNS = [
     "timestamp",
     "benchmark_mode",
+    "run_id",
     "topology",
     "topology_seed",
     "algorithm",

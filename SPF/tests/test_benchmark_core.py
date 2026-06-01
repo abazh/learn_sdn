@@ -23,6 +23,9 @@ def test_benchmark_records_include_expected_fields():
     assert isinstance(record["path_switches"], list)
     assert record["source_switch"] != record["destination_switch"]
     assert record["runtime_ms"] >= 0
+    assert "run_id" in record
+    assert isinstance(record["run_id"], str)
+    assert record["run_id"].startswith("run_graph_")
 
 
 def test_records_are_json_serialisable():

@@ -73,6 +73,7 @@ def _packet_row(pkt, meta):
         "topology": meta.get("topology", ""),
         "algorithm": meta.get("algorithm", ""),
         "scenario": meta.get("scenario", ""),
+        "run_id": meta.get("run_id", ""),
         "host": meta.get("host", ""),
         "pcap_file": meta.get("pcap_file", ""),
         "src_mac": src_mac,
@@ -89,10 +90,20 @@ def _packet_row(pkt, meta):
 def _pcap_metadata(pcap_path: Path, pcap_root: Path):
     rel = pcap_path.relative_to(pcap_root)
     parts = rel.parts
+    if len(parts) >= 5:
+        return {
+            "topology": parts[0],
+            "algorithm": parts[1],
+            "scenario": parts[2],
+            "run_id": parts[3],
+            "host": pcap_path.stem,
+            "pcap_file": str(rel),
+        }
     return {
         "topology": parts[0] if len(parts) > 0 else "",
         "algorithm": parts[1] if len(parts) > 1 else "",
         "scenario": parts[2] if len(parts) > 2 else "",
+        "run_id": "",
         "host": pcap_path.stem,
         "pcap_file": str(rel),
     }
@@ -119,6 +130,7 @@ def main(argv=None):
         "topology",
         "algorithm",
         "scenario",
+        "run_id",
         "host",
         "pcap_file",
         "src_mac",

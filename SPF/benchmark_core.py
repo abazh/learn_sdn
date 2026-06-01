@@ -239,6 +239,7 @@ def _build_algorithm_record(
     dst_host: str,
     repetition: int,
     benchmark_mode: str,
+    run_id: str | None = None,
 ):
     src_switch, first_port = graph.host_attachments[src_host]
     dst_switch, final_port = graph.host_attachments[dst_host]
@@ -261,6 +262,7 @@ def _build_algorithm_record(
         base_record = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "benchmark_mode": benchmark_mode,
+            "run_id": run_id,
             "topology": graph.name,
             "topology_seed": config.jellyfish_seed if graph.name == "jellyfish" else None,
             "algorithm": algorithm_name,
@@ -315,6 +317,7 @@ def _build_algorithm_record(
         return {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "benchmark_mode": benchmark_mode,
+            "run_id": run_id,
             "topology": graph.name,
             "topology_seed": config.jellyfish_seed if graph.name == "jellyfish" else None,
             "algorithm": algorithm_name,
@@ -419,6 +422,7 @@ def benchmark_records_live(
     iperf_port: int = 5201,
     warmup_ping: bool = True,
     controller_log_path: str | None = None,
+    run_id: str | None = None,
 ):
     """Yield records from a live Mininet run with measured iperf3 throughput."""
 
@@ -428,6 +432,11 @@ def benchmark_records_live(
     algorithm_name = config.algorithms[0]
     if algorithm_name not in CONTROLLER_SCRIPTS:
         raise ValueError(f"live Mininet mode does not support algorithm: {algorithm_name}")
+
+    if run_id is None:
+        topo = config.topologies[0] if config.topologies else "unknown"
+        algo = algorithm_name
+        run_id = f"run_live_{topo}_{algo}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
     controller_process = None
     controller_log_stream = None
@@ -469,6 +478,7 @@ def benchmark_records_live(
                     dst_host,
                     repetition,
                     benchmark_mode="live",
+                    run_id=run_id,
                 )
 
                 if record.get("status") != "success":
@@ -511,8 +521,10 @@ def benchmark_records_live(
             _stop_controller_process(controller_process, controller_log_stream)
 
 
-def benchmark_records(config: BenchmarkConfig):
+def benchmark_records(config: BenchmarkConfig, run_id: str | None = None):
     """Yield one JSON-serialisable record per benchmark run."""
+    if run_id is None:
+        run_id = f"run_graph_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
     for topology_name in config.topologies:
         graph = build_topology_graph(topology_name, config)
@@ -529,6 +541,7 @@ def benchmark_records(config: BenchmarkConfig):
                         dst_host,
                         repetition,
                         benchmark_mode="graph",
+                        run_id=run_id,
                     )
 
 

@@ -298,10 +298,10 @@ def _restore_link_params(link, left_params: dict, right_params: dict):
     link.intf2.config(**right_params)
 
 
-def _start_tcpdump(net: Mininet, base_dir: Path, topology: str, algorithm: str, scenario: str, snaplen: int):
+def _start_tcpdump(net: Mininet, base_dir: Path, topology: str, algorithm: str, scenario: str, snaplen: int, run_id: str):
     pcap_paths: dict[str, str] = {}
     pids: dict[str, str] = {}
-    scenario_dir = base_dir / topology / algorithm / scenario
+    scenario_dir = base_dir / topology / algorithm / scenario / run_id
     scenario_dir.mkdir(parents=True, exist_ok=True)
 
     for host in net.hosts:
@@ -379,6 +379,12 @@ def run_scenarios(args):
                     if topology_name != "jellyfish" and scenario_name == "random_link_down_jellyfish":
                         continue
                     scenario = SCENARIOS[scenario_name]
+                    
+                    # Generate a unique run_id for this scenario execution
+                    run_id = f"run_scenario_{topology_name}_{algorithm_name}_{scenario_name}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+                    sys.stderr.write(f"\n[RUN] Starting Scenario: {scenario_name} | Topology: {topology_name} | Algorithm: {algorithm_name} | Run ID: {run_id}\n")
+                    sys.stderr.flush()
+
                     controller_process = None
                     controller_log_stream = None
                     net = None
@@ -468,6 +474,7 @@ def run_scenarios(args):
                                 algorithm_name,
                                 scenario.name,
                                 args.pcap_snaplen,
+                                run_id,
                             )
 
                         pingall_loss = net.pingAll() if net.hosts else None
@@ -485,6 +492,7 @@ def run_scenarios(args):
                                     dst_host,
                                     repetition,
                                     benchmark_mode="live",
+                                    run_id=run_id,
                                 )
 
                                 link_timing = {}
@@ -493,6 +501,17 @@ def run_scenarios(args):
                                         "down_at": args.link_down_delay if scenario.during_traffic else 0.0,
                                         "up_at": args.link_up_delay if scenario.action == "link_flap" else None,
                                     }
+
+                                tcpdump_csv_paths = {}
+                                for host_name, pcap_path in tcpdump_paths.items():
+                                    try:
+                                        pcap_path_obj = Path(pcap_path)
+                                        rel_path = pcap_path_obj.relative_to(args.pcap_dir)
+                                        csv_base = Path(args.pcap_dir).parent / "pcap-csv"
+                                        csv_path = csv_base / rel_path.with_suffix(".csv")
+                                        tcpdump_csv_paths[host_name] = str(csv_path)
+                                    except Exception:
+                                        tcpdump_csv_paths[host_name] = pcap_path.replace("pcap", "pcap-csv").replace(".pcap", ".csv")
 
                                 record.update(
                                     {
@@ -508,7 +527,7 @@ def run_scenarios(args):
                                         "link_timing_s": link_timing,
                                         "pingall_loss_pct": pingall_loss,
                                         "tcpdump_pcap_paths": tcpdump_paths,
-                                        "tcpdump_csv_paths": {},
+                                        "tcpdump_csv_paths": tcpdump_csv_paths,
                                         "event_timestamps": list(scenario_events),
                                         "throttle_bw_mbps": args.throttle_bw_mbps
                                         if scenario.action == "throttle"
