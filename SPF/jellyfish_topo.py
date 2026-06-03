@@ -16,12 +16,13 @@ class JellyfishTopo( Topo ):
         kwargs.update( opts )
         return super(JellyfishTopo, self).addSwitch( name, **kwargs )
 
-    def __init__( self, num_switches=10, num_ports=4, num_sw_ports=3, seed=42 ):
+    def __init__( self, num_switches=10, num_ports=4, num_sw_ports=3, seed=42, bw=100 ):
         "Create jellyfish topo. k=num_ports, r=num_sw_ports, 1 host per switch."
 
         Topo.__init__( self )
 
         random.seed( seed )
+        self.bw = bw
 
         N = num_switches
         k = num_ports       # total ports per switch
@@ -38,7 +39,7 @@ class JellyfishTopo( Topo ):
                 ip=f'10.0.0.{i+1}/24',
                 mac=f'00:00:00:00:{i:02x}:01'
             )
-            self.addLink( sw, host )
+            self.addLink( sw, host, bw=self.bw )
             switches.append( sw )
 
         # Build random r-regular graph via incremental algorithm
@@ -53,7 +54,7 @@ class JellyfishTopo( Topo ):
         def add_link_between( a, b ):
             pair = tuple( sorted( [a, b] ) )
             if pair not in added_links:
-                self.addLink( a, b )
+                self.addLink( a, b, bw=self.bw )
                 added_links.add( pair )
                 free[a]  -= 1
                 free[b]  -= 1

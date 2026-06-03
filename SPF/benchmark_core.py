@@ -99,6 +99,7 @@ def load_topology(topology_name: str, config: BenchmarkConfig):
             num_ports=config.jellyfish_ports,
             num_sw_ports=config.jellyfish_sw_ports,
             seed=config.jellyfish_seed,
+            bw=config.default_bandwidth_mbps,
         )
     raise ValueError(f"unknown topology: {topology_name}")
 
