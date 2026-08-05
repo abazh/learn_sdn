@@ -14,6 +14,22 @@ dist/
 venv/
 env/
 ENV/
+.venv/
+
+# Test / lint / type-check caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# AI assistant local state
+.claude/
+CLAUDE.md
+CONTEXT.md
+
+# Local benchmark artifacts
+SPF/benchmark-results/
 
 # IDE
 .vscode/
